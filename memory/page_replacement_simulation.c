@@ -24,80 +24,82 @@ void printCurrentFrame(int frames[], unsigned int frameLength) {
     }
 }
 
-// FIFO(First In First Out) Page Replacement Algorithm
+// FIFO (First In First Out) Page Replacement Algorithm
 int FIFOReplacementAlgorithm(int referenceString[], unsigned int referenceStringLength,
                              int frames[], unsigned int frameLength) {
     unsigned int numberOfPageFaults = 0;
     int currentFrameIndex = 0;
-    bool isPageFaultOccured = false;
+    bool isPageFaultOccurred = false;
 
-    for (int index = 0; index < referenceStringLength; index++) {
-        if (!isPageInFrame(frames, frameLength, referenceString[index])) {
-            // Page Fault. Replace the page in the current frame
-            frames[currentFrameIndex] = referenceString[index];
+    for (int refIndex = 0; refIndex < referenceStringLength; refIndex++) {
+        if (!isPageInFrame(frames, frameLength, referenceString[refIndex])) {
+            // Page fault occurred. Replace the page in the current frame
+            frames[currentFrameIndex] = referenceString[refIndex];
             currentFrameIndex = (currentFrameIndex + 1) % frameLength;
             numberOfPageFaults++;
-            isPageFaultOccured = true;
+            isPageFaultOccurred = true;
         }
 
-        printf("FIFO - Page %d => ", referenceString[index]);
+        printf("FIFO - Page %d => ", referenceString[refIndex]);
         printCurrentFrame(frames, frameLength);
-        if (isPageFaultOccured)
+        if (isPageFaultOccurred)
             printf(" (Page Fault)\n");
         else
             printf(" (Page Hit)\n");
-        isPageFaultOccured = false;
+        isPageFaultOccurred = false;
     }
     return numberOfPageFaults;
 }
 
-// LRU(Least Recently Used) Page Replacement Algorithm
+// LRU (Least Recently Used) Page Replacement Algorithm
 int LRUReplacementAlgorithm(int referenceString[], unsigned int referenceStringLength,
                             int frames[], unsigned int frameLength) {
     unsigned int numberOfPageFaults = 0;
     int currentFrameIndex = 0;
-    int lastUsedFrame[MAX_FRAMES] = {0};            // Array to store the last used index of each frame
-                                                    // As the value of lastUsedFrame[i] increases, the frame is used more recently
-    bool isPageFaultOccured = false;
+    int lastUsedTime[MAX_FRAMES] = {0};  // Array to store the last used time of each frame
+    bool isPageFaultOccurred = false;
 
-    for (int index = 0; index < referenceStringLength; index++) {
-        int leastRecentlyUsedFrameIndex = 0;
+    for (int refIndex = 0; refIndex < referenceStringLength; refIndex++) {
+        int leastRecentlyUsedIndex = 0;
 
-        if (!isPageInFrame(frames, frameLength, referenceString[index])) {
+        if (!isPageInFrame(frames, frameLength, referenceString[refIndex])) {
             // If there is space in the frame, add the page to the frame
             if (currentFrameIndex < frameLength) {
-                frames[currentFrameIndex] = referenceString[index];
-                lastUsedFrame[currentFrameIndex] = index;
+                // Loading into the empty frame
+                frames[currentFrameIndex] = referenceString[refIndex];
+                lastUsedTime[currentFrameIndex] = refIndex;
                 currentFrameIndex++;
             } else {
-                // Page fault. Replace the page in the current frame
+                // Page fault occurred. Replace the least recently used page
+                // The least recently used page is the one with the smallest last used time
+                // because the last used time is updated whenever a page is accessed
                 for (int frameIndex = 1; frameIndex < frameLength; frameIndex++) {
-                    if (lastUsedFrame[frameIndex] < lastUsedFrame[leastRecentlyUsedFrameIndex])
-                        leastRecentlyUsedFrameIndex = frameIndex;
+                    if (lastUsedTime[frameIndex] < lastUsedTime[leastRecentlyUsedIndex])
+                        leastRecentlyUsedIndex = frameIndex;
                 }
-                // page is replaced in the least recently used frame
-                frames[leastRecentlyUsedFrameIndex] = referenceString[index];
+                // Replacement of the least recently used page
+                frames[leastRecentlyUsedIndex] = referenceString[refIndex];
+                lastUsedTime[leastRecentlyUsedIndex] = refIndex;
             }
             numberOfPageFaults++;
-            isPageFaultOccured = true;
-        }
-        
-        // Update the recent usage of the frame
-        for (int index_ = 0; index_ < frameLength; index_++) {
-            if (frames[index_] == referenceString[index]) {
-                // Now the updated frame is the most recently used frame
-                lastUsedFrame[index_] = index;
-                break;
+            isPageFaultOccurred = true;
+        } else {
+            // Update the recent usage of the frame that contains the page
+            for (int frameIndex = 0; frameIndex < frameLength; frameIndex++) {
+                if (frames[frameIndex] == referenceString[refIndex]) {
+                    lastUsedTime[frameIndex] = refIndex;
+                    break;
+                }
             }
         }
 
-        printf("LRU - Page %d => ", referenceString[index]);
+        printf("LRU - Page %d => ", referenceString[refIndex]);
         printCurrentFrame(frames, frameLength);
-        if (isPageFaultOccured)
+        if (isPageFaultOccurred)
             printf(" (Page Fault)\n");
         else
             printf(" (Page Hit)\n");
-        isPageFaultOccured = false;
+        isPageFaultOccurred = false;
     }
     return numberOfPageFaults;
 }
@@ -107,51 +109,53 @@ int OptimalReplacementAlgorithm(int referenceString[], unsigned int referenceStr
                                 int frames[], unsigned int frameLength) {
     unsigned int numberOfPageFaults = 0;
     int currentFrameIndex = 0;
-    int nextOccurrence[MAX_FRAMES] = {0};           // Array to store the next occurrence of each frame
-    bool isPageFaultOccured = false;
+    bool isPageFaultOccurred = false;
 
-    for (int index = 0; index < referenceStringLength; index++) {
-        int leastRecentlyUsedFrameIndex = 0;
-
-        if (!isPageInFrame(frames, frameLength, referenceString[index])) {
+    for (int refIndex = 0; refIndex < referenceStringLength; refIndex++) {
+        if (!isPageInFrame(frames, frameLength, referenceString[refIndex])) {
             // If there is space in the frame, add the page to the frame
             if (currentFrameIndex < frameLength) {
-                frames[currentFrameIndex] = referenceString[index];
+                // Loading into the empty frame
+                frames[currentFrameIndex] = referenceString[refIndex];
                 currentFrameIndex++;
             } else {
-                // Page fault. Replace the page in the current frame
-                for (int frameIndex = 1; frameIndex < frameLength; frameIndex++) {
-                    // Find the frame which has the least next occurrence
-                    // If the value is lower, it means the page is not used for a long time
-                    if (nextOccurrence[frameIndex] < nextOccurrence[leastRecentlyUsedFrameIndex])
-                        leastRecentlyUsedFrameIndex = frameIndex;
+                // Page fault occurred. Replace the page that will not be used for the longest period
+                int frameToReplaceIndex = -1;       // Index of the frame whose the page will be replaced
+                int maxFutureIndex = -1;            // The furthest future index at which a page will be used again
+
+                for (int frameIndex = 0; frameIndex < frameLength; frameIndex++) {
+                    int nextUse = -1;
+                    for (int futureRefIndex = refIndex + 1; futureRefIndex < referenceStringLength; futureRefIndex++) {
+                        // For each page in the frames, looks ahead in the refernece string to find when the "current page" will be reused(referenced again)
+                        if (frames[frameIndex] == referenceString[futureRefIndex]) {
+                            nextUse = futureRefIndex;
+                            break;
+                        }
+                    }
+                    if (nextUse == -1) {
+                        // If the page will not be used again, replace it
+                        frameToReplaceIndex = frameIndex;
+                        break;
+                    } else if (nextUse > maxFutureIndex) {
+                        // If the page will be used again, select one with the furthest future index
+                        maxFutureIndex = nextUse;
+                        frameToReplaceIndex = frameIndex;
+                    }
                 }
-                // page is replaced in the least recently used frame
-                frames[leastRecentlyUsedFrameIndex] = referenceString[index];
+                // Replacement of the page that will not be used for the longest period
+                frames[frameToReplaceIndex] = referenceString[refIndex];
             }
             numberOfPageFaults++;
-            isPageFaultOccured = true;
-        }
-        
-        // Update the next occurrence of the frame
-        for (int index_ = 0; index_ < frameLength; index_++) {
-            nextOccurrence[index_] = 0;
-            for (int index__ = index + 1; index__ < referenceStringLength; index__++) {
-                // For all reference string length, find the next occurrence of the frame and store it
-                if (frames[index_] == referenceString[index__]) {
-                    nextOccurrence[index_] = index__;
-                    break;
-                }
-            }
+            isPageFaultOccurred = true;
         }
 
-        printf("Optimal - Page %d => ", referenceString[index]);
+        printf("Optimal - Page %d => ", referenceString[refIndex]);
         printCurrentFrame(frames, frameLength);
-        if (isPageFaultOccured)
+        if (isPageFaultOccurred)
             printf(" (Page Fault)\n");
         else
             printf(" (Page Hit)\n");
-        isPageFaultOccured = false;
+        isPageFaultOccurred = false;
     }
     return numberOfPageFaults;
 }
@@ -174,21 +178,21 @@ int main(int argc, char* argv[]) {
 
     // FIFO (First In First Out) Page Replacement Algorithm
     for (int index = 0; index < frameLength; index++)
-        frames[index] = -1;             // Initialize the frames with -1
+        frames[index] = -1;  // Initialize the frames with -1
     printf("FIFO Page Replacement Algorithm\n");
     int numberOfPageFaults = FIFOReplacementAlgorithm(referenceString, referenceStringLength, frames, frameLength);
     printf("Number of page faults: %d\n", numberOfPageFaults);
 
     // LRU (Least Recently Used) Page Replacement Algorithm
     for (int index = 0; index < frameLength; index++)
-        frames[index] = -1;             // Initialize the frames with -1
+        frames[index] = -1;  // Initialize the frames with -1
     printf("LRU Page Replacement Algorithm\n");
     numberOfPageFaults = LRUReplacementAlgorithm(referenceString, referenceStringLength, frames, frameLength);
     printf("Number of page faults: %d\n", numberOfPageFaults);
 
     // Optimal Page Replacement Algorithm
     for (int index = 0; index < frameLength; index++)
-        frames[index] = -1;             // Initialize the frames with -1
+        frames[index] = -1;  // Initialize the frames with -1
     printf("Optimal Page Replacement Algorithm\n");
     numberOfPageFaults = OptimalReplacementAlgorithm(referenceString, referenceStringLength, frames, frameLength);
     printf("Number of page faults: %d\n", numberOfPageFaults);
