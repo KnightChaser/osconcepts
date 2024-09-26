@@ -75,6 +75,7 @@ int LRUReplacementAlgorithm(int referenceString[], unsigned int referenceStringL
                     if (lastUsedFrame[frameIndex] < lastUsedFrame[leastRecentlyUsedFrameIndex])
                         leastRecentlyUsedFrameIndex = frameIndex;
                 }
+                // page is replaced in the least recently used frame
                 frames[leastRecentlyUsedFrameIndex] = referenceString[index];
             }
             numberOfPageFaults++;
@@ -91,6 +92,60 @@ int LRUReplacementAlgorithm(int referenceString[], unsigned int referenceStringL
         }
 
         printf("LRU - Page %d => ", referenceString[index]);
+        printCurrentFrame(frames, frameLength);
+        if (isPageFaultOccured)
+            printf(" (Page Fault)\n");
+        else
+            printf(" (Page Hit)\n");
+        isPageFaultOccured = false;
+    }
+    return numberOfPageFaults;
+}
+
+// Optimal Page Replacement Algorithm
+int OptimalReplacementAlgorithm(int referenceString[], unsigned int referenceStringLength,
+                                int frames[], unsigned int frameLength) {
+    unsigned int numberOfPageFaults = 0;
+    int currentFrameIndex = 0;
+    int nextOccurrence[MAX_FRAMES] = {0};           // Array to store the next occurrence of each frame
+    bool isPageFaultOccured = false;
+
+    for (int index = 0; index < referenceStringLength; index++) {
+        int leastRecentlyUsedFrameIndex = 0;
+
+        if (!isPageInFrame(frames, frameLength, referenceString[index])) {
+            // If there is space in the frame, add the page to the frame
+            if (currentFrameIndex < frameLength) {
+                frames[currentFrameIndex] = referenceString[index];
+                currentFrameIndex++;
+            } else {
+                // Page fault. Replace the page in the current frame
+                for (int frameIndex = 1; frameIndex < frameLength; frameIndex++) {
+                    // Find the frame which has the least next occurrence
+                    // If the value is lower, it means the page is not used for a long time
+                    if (nextOccurrence[frameIndex] < nextOccurrence[leastRecentlyUsedFrameIndex])
+                        leastRecentlyUsedFrameIndex = frameIndex;
+                }
+                // page is replaced in the least recently used frame
+                frames[leastRecentlyUsedFrameIndex] = referenceString[index];
+            }
+            numberOfPageFaults++;
+            isPageFaultOccured = true;
+        }
+        
+        // Update the next occurrence of the frame
+        for (int index_ = 0; index_ < frameLength; index_++) {
+            nextOccurrence[index_] = 0;
+            for (int index__ = index + 1; index__ < referenceStringLength; index__++) {
+                // For all reference string length, find the next occurrence of the frame and store it
+                if (frames[index_] == referenceString[index__]) {
+                    nextOccurrence[index_] = index__;
+                    break;
+                }
+            }
+        }
+
+        printf("Optimal - Page %d => ", referenceString[index]);
         printCurrentFrame(frames, frameLength);
         if (isPageFaultOccured)
             printf(" (Page Fault)\n");
@@ -131,6 +186,13 @@ int main(int argc, char* argv[]) {
     numberOfPageFaults = LRUReplacementAlgorithm(referenceString, referenceStringLength, frames, frameLength);
     printf("Number of page faults: %d\n", numberOfPageFaults);
 
+    // Optimal Page Replacement Algorithm
+    for (int index = 0; index < frameLength; index++)
+        frames[index] = -1;             // Initialize the frames with -1
+    printf("Optimal Page Replacement Algorithm\n");
+    numberOfPageFaults = OptimalReplacementAlgorithm(referenceString, referenceStringLength, frames, frameLength);
+    printf("Number of page faults: %d\n", numberOfPageFaults);
+
     return 0;
 }
 
@@ -163,3 +225,15 @@ int main(int argc, char* argv[]) {
 // LRU - Page 2 => [4] [0] [2]  (Page Fault)
 // LRU - Page 3 => [4] [3] [2]  (Page Fault)
 // Number of page faults: 8
+// Optimal Page Replacement Algorithm
+// Optimal - Page 7 => [7] [ ] [ ]  (Page Fault)
+// Optimal - Page 0 => [7] [0] [ ]  (Page Fault)
+// Optimal - Page 1 => [7] [0] [1]  (Page Fault)
+// Optimal - Page 2 => [2] [0] [1]  (Page Fault)
+// Optimal - Page 0 => [2] [0] [1]  (Page Hit)
+// Optimal - Page 3 => [2] [0] [3]  (Page Fault)
+// Optimal - Page 0 => [2] [0] [3]  (Page Hit)
+// Optimal - Page 4 => [2] [4] [3]  (Page Fault)
+// Optimal - Page 2 => [2] [4] [3]  (Page Hit)
+// Optimal - Page 3 => [2] [4] [3]  (Page Hit)
+// Number of page faults: 6
