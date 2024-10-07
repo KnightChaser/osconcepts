@@ -1,4 +1,4 @@
-// scheduling/fcfs.c
+// scheduling/FCFS.c
 #include <stdio.h>
 
 typedef struct {
