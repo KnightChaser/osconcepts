@@ -60,7 +60,7 @@ int main() {
     calculateTimes(tasks, numberOfTasks);
     displayGanttChart(tasks, numberOfTasks);
 
-    printf("Total Waiting Time: %f\n", (float)tasks[numberOfTasks - 1].endTime / numberOfTasks);
+    printf("Total Waiting Time: %f\n", (float)tasks[numberOfTasks - 1].endTime);
     printf("Average Waiting Time: %f\n", (float)tasks[numberOfTasks - 1].endTime / numberOfTasks);
 
     return 0;
