@@ -1,4 +1,4 @@
-// scheduling/FCFS.c
+// scheduling/first_come_first_serve_scheduling.c
 #include <stdio.h>
 
 typedef struct {

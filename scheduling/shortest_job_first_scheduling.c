@@ -1,4 +1,4 @@
-// scheduling/SJF.c
+// scheduling/shortest_job_first_scheduling.c
 #include <stdio.h>
 
 // Define the task struct

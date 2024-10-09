@@ -1,4 +1,4 @@
-// scheduling/CFS.c
+// scheduling/completely_fair_scheduling.c
 // A brief implementation of CFS(Completely Fair Scheduling).
 #include <stdio.h>
 #include <stdbool.h>
