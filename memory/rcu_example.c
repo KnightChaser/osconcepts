@@ -1,3 +1,5 @@
+// gcc -o rcu_example.out rcu_example.c -lurcu-memb -lpthread
+
 // RCU(Read-Copy Update) is a synchronization mechanism that allows 
 // multiple readers to access shared data concurrently while a writer updates the data.
 
