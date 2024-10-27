@@ -71,3 +71,17 @@ void *thread1 (void *arg) {
 
     return NULL;
 }
+
+int main(void) {
+	pthread_t thread0_id, thread1_id;
+
+	// Create two threads for the two processes
+	pthread_create(&thread0_id, NULL, thread0, NULL);
+	pthread_create(&thread1_id, NULL, thread1, NULL);
+
+	// Wait for the threads to finish
+	pthread_join(thread0_id, NULL);
+	pthread_join(thread1_id, NULL);
+
+	return 0;
+}
